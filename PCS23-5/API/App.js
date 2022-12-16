@@ -1,33 +1,46 @@
-const express = require('express');
-const app = express();
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const userRoute = require('./api/routes/user');
-const orderRoute = require('./api/routes/orders')
-const cors = require('cors');
-
-mongoose.connect('mongodb+srv://Hrhk:Hrhk@cluster0.54zdahr.mongodb.net/?retryWrites=true&w=majority')
-
-mongoose.connection.on('error', Error => {
-  console.log('connection failed')
-})
-
-mongoose.connection.on('connected', Connected => {
-  console.log('connected with database...')
-})
-app.use(cors())
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-app.use('/user', userRoute) ;
-app.use('/orders', orderRoute) ;
+import React, { useRef, useEffect } from 'react';
+import { useLocation, Switch } from 'react-router-dom';
+import AppRoute from './utils/AppRoute';
+import ScrollReveal from './utils/ScrollReveal';
+import ReactGA from 'react-ga';
 
 
-app.use((req, res, next) => {
-  res.status(404).json({
-    error: 'bad req'
-  })
-})
+// Layouts
+import LayoutDefault from './layouts/LayoutDefault';
 
-module.exports = app;
+// Views 
+import Home from './views/Home';
+
+// Initialize Google Analytics
+ReactGA.initialize(process.env.REACT_APP_GA_CODE);
+
+const trackPage = page => {
+  ReactGA.set({ page });
+  ReactGA.pageview(page);
+};
+
+const App = () => {
+
+  const childRef = useRef();
+  let location = useLocation();
+
+  useEffect(() => {
+    const page = location.pathname;
+    document.body.classList.add('is-loaded')
+    childRef.current.init();
+    trackPage(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location]);
+
+  return (
+    <ScrollReveal
+      ref={childRef}
+      children={() => (
+        <Switch>
+          <AppRoute exact path="/" component={Home} layout={LayoutDefault} />
+        </Switch>
+      )} />
+  );
+}
+
+export default App;
